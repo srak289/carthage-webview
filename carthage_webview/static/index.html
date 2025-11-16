@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no,minimal-ui,user-scalable=no"/>
+  <link rel="icon" type="image/x-icon" href="/static/carthage.png"/>
+  <title>Mithril + Tailwind</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/cytoscape/cystoscape.js"></script>
+  <script src="https://unpkg.com/mithril/mithril.js"></script>
+</head>
+
+<body class="bg-gray-100 text-gray-900">
+  <script>
+    let root = document.body
+
+    let InjectorComponent = {
+        title: "Injector Hierarchy",
+        view: function() {
+            m.request({
+                method: "GET",
+                url: "/api/injector",
+            })
+            .then(obj => {
+                console.log("Fetched: ", obj)
+            })
+        }
+    }
+
+    let ProviderComponent = {
+        title: "Providers",
+        view: function() {
+            m.request({
+                method: "GET",
+                url: "/api/injector",
+            })
+            .then(obj => {
+                console.log("Fetched: ", obj)
+            })
+        }
+    }
+
+    let DependencyComponent = {
+        title: "Dependencies",
+        view: function() {
+            m.request({
+                method: "GET",
+                url: "/api/injector",
+            })
+            .then(obj => {
+                console.log("Fetched: ", obj)
+            })
+        }
+    }
+
+    let LinksComponent = {
+        view: function(vnode) {
+            return m("div", {class: "main"}, [
+                m("div", {class: "links-bar"}, Object.entries(pages).map(([k, v]) =>
+                    m("div", {class: "links-item", onclick: () => m.route.set(k)},
+                        m("h3", {class: "links-text"}, v.title)
+                    )
+                )),
+                vnode.children
+            ]);
+        }
+    }
+
+    let Graph = {
+        model: {},
+        fetch: function() {
+            m.request({
+                method: "GET",
+                url: "/api/v1/nodes",
+            })
+            .then(function(result) {
+                Graph.model = result
+            });
+        },
+    }
+
+    let CytoscapeComponent = {
+        title: "Cytoscape",
+        cy: null,
+        dblClickHandler(evt) {
+            evt.cy.animate({
+                fit: {eles: evt.target, padding: 50},
+                duration: 500,
+                easing: 'ease-in-out',
+            });
+        },
+        setup() {
+            CytoscapeComponent.cy = cytoscape({
+                container: document.getElementById("cy"),
+                elements: Graph.model.elements,
+                style: [
+                  {
+                    selector: 'node',
+                    style: {
+                      'background-color': '#3498db',
+                      'label': 'data(id)'
+                    }
+                  },
+                  {
+                    selector: 'edge',
+                    style: {
+                      'width': 2,
+                      'line-color': '#ccc'
+                    }
+                  }
+                ],
+                layout: { name: 'cose', animated: false },
+                wheelSensitivity: 0.05,
+            });
+            CytoscapeComponent.cy.on("vdblclick", CytoscapeComponent.dblClickHandler);
+        },
+        view: function() {
+            return m(LinksComponent, m("div", {class: "cytoscape-component"}, [
+                m("div", {id: "cy", class: "cytoscape-canvas"}),
+                m("button", {onclick: () => CytoscapeComponent.cy.animate({
+                    fit: { padding: 20 },
+                    duration: 500,
+                    easing: 'ease-in-out',
+                })}, "Fit"),
+                m("button", {onclick: () => {
+                    CytoscapeComponent.cy.elements().remove();
+                    CytoscapeComponent.setup();
+                }}, "Redraw"),
+                m("button", {onclick: () => {
+                    CytoscapeComponent.cy.elements().remove();
+                    Graph.fetch();
+                    CytoscapeComponent.setup();
+                }}, "Renew"),
+                m("p", "Double-click to zoom to a node"),
+            ]));
+        },
+        oninit: Graph.fetch,
+        oncreate: function() {
+            CytoscapeComponent.setup();
+        },
+        onbeforeremove: function() {
+            CytoscapeComponent.cy.destroy();
+        }
+    }
+
+    let MainComponent = {
+        title: "Home",
+        view: function() {
+            return m(LinksComponent, m("div", {class: "home-component"}, [
+                m("h1", {class: "home-component-title"}, "Welcome"),
+                m("p", {class: "home-component-content"}, "Click the Cytoscape tab to view a graph"),
+            ]));
+        }
+    }
+
+    let MainComponent = {
+        view: function() {
+            return m('div', {class: "bg-green-600"}, [
+                m('h1', {class: "py-2"}, 'Test'),
+                m("button",
+                    {
+                        class: "mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700",
+                        onclick: () => alert("Tailwind + Mithril works!")
+                    },
+                    "Click Me"
+                )
+            ])
+        }
+    }
+
+    let pages = {
+        "/": MainComponent,
+        "/cy": CytoscapeComponent,
+    }
+
+    m.route(root, "/", pages);
+
+  </script>
+
+</body>
+</html>
+
