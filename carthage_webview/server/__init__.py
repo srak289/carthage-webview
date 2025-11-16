@@ -1,3 +1,5 @@
+import asyncio
+
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 from tornado.options import define, options
@@ -10,7 +12,7 @@ enable_pretty_logging()
 
 define('port', default=9000, help='port to listen on')
 
-def main():
+async def amain():
     """Construct and serve the tornado application."""
     app = Application([
         ('/', FileHandler),
@@ -19,7 +21,6 @@ def main():
         (r'/api/(.+)', ApiHandler)
         #(r'/static/(.+)', FileHandler)
     ])
-    http_server = HTTPServer(app)
-    http_server.listen(options.port)
+    app.listen(options.port)
     print(f'Listening on http://localhost: {options.port}')
-    IOLoop.current().start()
+    await asyncio.Future()

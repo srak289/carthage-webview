@@ -1,5 +1,6 @@
 name: carthage_webview
 python: .
+package: carthage_webview
 depends:
   - deb: python3-tornado
-    pip: tornado
+    pypi: tornado
